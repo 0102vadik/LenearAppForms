@@ -13,9 +13,6 @@ class RootForm(tk.Toplevel):
         label = tk.Label(self, text="Напр.", justify='left')
         label.grid(row=0, column=numberVariables*2)
 
-        # label = tk.Label(self, text="Значение ЦФ", justify='left')
-        # label.grid(row=2, column=numberVariables*2)
-
         self.objectiveFunctionCoefficients = []
         for i in range(1):
             self.objectiveFunctionCoefficient = []
@@ -29,8 +26,6 @@ class RootForm(tk.Toplevel):
                 label.grid(row=1, column=j * 2 + 1)
                 self.objectiveFunctionCoefficient.append((entry, label))
 
-            # entry = tk.Entry(self, state='readonly')
-            # entry.grid(row=3, column=numberVariables*2)
             self.objectiveFunctionDirection = tk.StringVar()
             combobox = ttk.Combobox(self, values=["min", "max"], textvariable=self.objectiveFunctionDirection)
             combobox.grid(row=1, column=numberVariables*2)
@@ -58,7 +53,7 @@ class RootForm(tk.Toplevel):
                 label.grid(row=i + 3, column=j * 2 + 1)
                 self.restriction.append((entry, label))
 
-            equal_combobox = ttk.Combobox(self, values=["=", "<", ">"])
+            equal_combobox = ttk.Combobox(self, values=["=", "<=", ">="])
             equal_combobox.grid(row=i + 3, column=numberVariables*2)
             entry = tk.Entry(self)
             entry.grid(row=i + 3, column=numberVariables*2+1)
@@ -89,21 +84,10 @@ class RootForm(tk.Toplevel):
 
         self.data.append((self.objectiveFunction_data, self.restriction_all_data))
         PARAM = service.start(self.objectiveFunction_data, self.restriction_all_data)
-        objectiveFunctionResult = tk.StringVar()
-        objectiveFunctionResult.set(PARAM.fun)
-        label = tk.Label(self, text='Значение ЦФ:', justify='left')
-        label.grid(row=1000, columnspan=2)
-        label = tk.Label(self, textvariable=objectiveFunctionResult, justify='left')
-        label.grid(row=1001, columnspan=2)
-        internalParametersResult = tk.StringVar()
-        internalParametersResult.set(PARAM.x)
-        label = tk.Label(self, text='Значения внутренних параметров:', justify='left')
-        label.grid(row=1002, columnspan=2)
-        rows = 1003
-        for internalParameter in PARAM.x:
-            label = tk.Label(self, text=f'{internalParameter}', justify='left')
-            label.grid(row=rows, columnspan=2)
-            rows = rows + 1
+
+        objectiveFunctionResult = PARAM.fun
+        internalParametersResults = PARAM.x
+        ResultForm(self, objectiveFunctionResult, internalParametersResults)
 
 
 class App(tk.Tk):
@@ -136,6 +120,32 @@ class App(tk.Tk):
                 tk.messagebox.showerror(title='Ошибка', message='Количество ограничений должно быть больше нуля')
         else:
             tk.messagebox.showerror(title='Ошибка', message='Количество переменных должно быть больше единицы')
+
+class ResultForm(tk.Toplevel):
+    def __init__(self, parent, objectiveFunctionResult, internalParametersResults):
+        super().__init__(parent)
+        label = tk.Label(self, text="Значение ЦФ:", justify='left')
+        label.grid(row=0, column=1)
+
+        label = tk.Label(self, text=f"{objectiveFunctionResult}", justify='left')
+        label.grid(row=1, column=1)
+
+        label = tk.Label(self, text="Значения внутренних параметров:", justify='left')
+        label.grid(row=2, column=1)
+
+        rows = 3
+        i = 1
+        for internalParameterResult in internalParametersResults:
+            internalParameterResultLabel = tk.Label(self, text=f"x{i}: {internalParameterResult}", justify='left')
+            internalParameterResultLabel.grid(row=rows, columnspan=2)
+            rows = rows + 1
+            i = i + 1
+
+        button = tk.Button(self, text="Закрыть", command=self.close)
+        button.grid(row=999, columnspan=2)
+
+    def close(self):
+        self.destroy()
 
 if __name__ == "__main__":
     app = App()
